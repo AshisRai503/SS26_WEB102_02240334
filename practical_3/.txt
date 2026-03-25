@@ -1,0 +1,4 @@
+We built a to-do app with a React frontend, Node.js backend, and a database. 
+We packaged each part into a Docker container — think of it as a box that holds everything the app needs to run. We then uploaded those boxes to Docker Hub (like a cloud storage for containers), and deployed them on Render.com, which is a hosting platform that pulls our containers and runs them live on the internet.
+For the automated part, we connected our GitHub repo directly to Render, so every time we push new code, Render automatically rebuilds and redeploys the app — no manual steps needed."
+That's essentially the whole assignment in plain English. The three key ideas your audience needs to walk away with are: Docker packages the app, Docker Hub stores it, and Render hosts and auto-deploys it
