@@ -5,7 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
 
-// Load environment variables
+// Load env vars
 dotenv.config();
 
 const app = express();
@@ -20,32 +20,36 @@ app.use(require('./middleware/formatResponse'));
 // Static files
 app.use(express.static('public'));
 
-// Routes
-app.use('/api/users', require('./routes/users'));
-app.use('/api/posts', require('./routes/posts'));
-
 // Basic route
 app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to Social Media API' });
+    res.json({ message: 'Welcome to Social Media API' });
 });
 
 // API Documentation route
 app.get('/api-docs', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'docs.html'));
+    res.sendFile(path.join(__dirname, 'public', 'docs.html'));
 });
+
+// API Routes
+app.use('/users', require('./routes/users'));
+app.use('/posts', require('./routes/posts'));
+//app.use('/comments', require('./routes/comments'));
+//app.use('/likes', require('./routes/likes'));
+//app.use('/followers', require('./routes/followers'));
 
 // Error handler middleware
 app.use(require('./middleware/errorHandler'));
 
+// Server configuration
 const PORT = process.env.PORT || 3000;
 
-const server = app.listen(PORT, () => {
-  console.log(`Server running in development mode on port ${PORT}`);
-  console.log(`API Documentation: http://localhost:${PORT}/api-docs`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running in development mode on port ${PORT}`);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
-  console.log(`Error: ${err.message}`);
-  server.close(() => process.exit(1));
+    console.log(`Error: ${err.message}`);
+    // Close server & exit process
+    process.exit(1);
 });
