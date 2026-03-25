@@ -20,12 +20,12 @@ const users = [
     },
     {
       id: '3',
-      username: 'ash5zero3',
-      full_name: 'Ashis Rai',
-      email: 'ash5zero3@example.com',
+      username: 'techgeek',
+      full_name: 'Tenzin Dorji',
+      email: 'techgeek@example.com',
       profile_picture: 'https://example.com/profiles/techgeek.jpg',
       bio: 'Tech lover',
-      created_at: '2026-01-1'
+      created_at: '2023-01-25'
     }
    ];
    
