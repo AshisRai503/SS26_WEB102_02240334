@@ -1,0 +1,109 @@
+#%RAML 1.0
+title: Book Library API
+version: v1
+baseUri: https://api.booklibrary.com/{version}
+mediaType: application/json
+
+/books:
+  get:
+    queryParameters:
+      author:
+        type: string
+        required: false
+      publicationYear:
+        type: integer
+        required: false
+      rating:
+        type: number
+        required: false
+      isbn:
+        type: string
+        minLength: 10
+        required: false
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              {
+                "id": "SbBGk",
+                "title": "Stiff: The Curious Lives of Human Cadavers",
+                "author": "Mary Roach",
+                "publicationYear": 2003,
+                "rating": 4.2,
+                "isbn": "9780143119755"
+              }
+
+  post:
+    responses:
+      201:
+        body:
+          application/json:
+            example: |
+              {
+                "id": "new123",
+                "title": "New Book",
+                "author": "Author Name"
+              }
+
+  /{bookId}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              example: |
+                {
+                  "id": "SbBGk",
+                  "title": "Stiff: The Curious Lives of Human Cadavers",
+                  "description": null,
+                  "author": "Mary Roach",
+                  "link": "http://e-bookmobile.com/books/Stiff"
+                }
+
+    put:
+      queryParameters:
+        access_token:
+          type: string
+          required: true
+      responses:
+        200:
+          body:
+            application/json:
+              example: |
+                {
+                  "success": true,
+                  "status": 200
+                }
+
+    delete:
+      queryParameters:
+        access_token:
+          type: string
+          required: true
+      responses:
+        204:
+
+    /author:
+      get:
+        responses:
+          200:
+            body:
+              application/json:
+                example: |
+                  {
+                    "name": "Mary Roach",
+                    "bio": "American author"
+                  }
+
+    /publisher:
+      get:
+        responses:
+          200:
+            body:
+              application/json:
+                example: |
+                  {
+                    "name": "W.W. Norton",
+                    "location": "New York"
+                  }
