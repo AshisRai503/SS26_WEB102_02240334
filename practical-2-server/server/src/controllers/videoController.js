@@ -1,4 +1,6 @@
 const prisma = require('../lib/prisma');
+const fs = require("fs");
+const storageService = require("../services/storageService");
 
 // Get all videos
 exports.getAllVideos = async (req, res) => {
