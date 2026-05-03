@@ -1,8 +1,0 @@
-SS26_WEB102_02240334/
-├─ practical_1/
-│  └─ social-media-api/
-│     ├─ controllers/
-│     ├─ middleware/
-│     ├─ public/
-│     ├─ routes/
-│     └─ utils/
