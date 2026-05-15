@@ -338,62 +338,92 @@ exports.getFollowingVideos = async (req, res) => {
 // Create video with Supabase storage
 exports.createVideo = async (req, res) => {
   try {
-    const { caption, audioName } = req.body;
+    const {
+      caption,
+      audioName,
+      videoUrl,
+      thumbnailUrl,
+      videoStoragePath,
+      thumbnailStoragePath,
+    } = req.body;
+
     const userId = req.user.id;
-    
-    // Check if files exist
+
+    // Case 1: Frontend already uploaded to Supabase and sent URLs
+    if (videoUrl && videoStoragePath) {
+      const newVideo = await prisma.video.create({
+        data: {
+          userId: parseInt(userId),
+          caption,
+          audioName,
+          videoUrl,
+          thumbnailUrl: thumbnailUrl || null,
+          videoStoragePath,
+          thumbnailStoragePath: thumbnailStoragePath || null,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              name: true,
+              avatar: true,
+            },
+          },
+        },
+      });
+
+      return res.status(201).json(newVideo);
+    }
+
+    // Case 2: Old method, backend receives file and uploads to Supabase
     if (!req.files || !req.files.video) {
       return res.status(400).json({ message: 'Video file is required' });
     }
-    
+
     const videoFile = req.files.video[0];
     const thumbnailFile = req.files.thumbnail ? req.files.thumbnail[0] : null;
-    
-    // Generate unique file names for storage
+
     const videoFileName = storageService.generateUniqueFileName(videoFile.originalname);
     const videoPath = `user-${userId}/${videoFileName}`;
-    
-    let thumbnailPath = null;
-    
-    // Upload video to Supabase
-    const { fileUrl: videoUrl } = await storageService.uploadFile(
+
+    const { fileUrl: uploadedVideoUrl } = await storageService.uploadFile(
       'videos',
       videoPath,
       fs.readFileSync(videoFile.path)
     );
-    
-    // Upload thumbnail if it exists
-    let thumbnailUrl = null;
+
+    let uploadedThumbnailUrl = null;
+    let thumbnailPath = null;
+
     if (thumbnailFile) {
       const thumbnailFileName = storageService.generateUniqueFileName(thumbnailFile.originalname);
       thumbnailPath = `user-${userId}/${thumbnailFileName}`;
-      
+
       const { fileUrl } = await storageService.uploadFile(
         'thumbnails',
         thumbnailPath,
         fs.readFileSync(thumbnailFile.path)
       );
-      
-      thumbnailUrl = fileUrl;
+
+      uploadedThumbnailUrl = fileUrl;
     }
-    
-    // Clean up local files after uploading to Supabase
+
     fs.unlinkSync(videoFile.path);
+
     if (thumbnailFile) {
       fs.unlinkSync(thumbnailFile.path);
     }
-    
-    // Create video record in database
+
     const newVideo = await prisma.video.create({
       data: {
         userId: parseInt(userId),
         caption,
         audioName,
-        videoUrl,
-        thumbnailUrl,
-        // Store reference to file paths in Supabase for potential deletion later
+        videoUrl: uploadedVideoUrl,
+        thumbnailUrl: uploadedThumbnailUrl,
         videoStoragePath: videoPath,
-        thumbnailStoragePath: thumbnailPath
+        thumbnailStoragePath: thumbnailPath,
       },
       include: {
         user: {
@@ -401,18 +431,19 @@ exports.createVideo = async (req, res) => {
             id: true,
             username: true,
             name: true,
-            avatar: true
-          }
-        }
-      }
+            avatar: true,
+          },
+        },
+      },
     });
-    
+
     res.status(201).json(newVideo);
   } catch (error) {
     console.error('Error creating video:', error);
     res.status(500).json({ message: 'Failed to create video' });
   }
 };
+
 
 // Update video
 exports.updateVideo = async (req, res) => {

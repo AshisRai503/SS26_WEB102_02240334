@@ -1,45 +1,69 @@
-const fs = require("fs");
-const path = require("path");
-const crypto = require("crypto");
+const supabase = require('../lib/supabase');
+const crypto = require('crypto');
+const path = require('path');
 
-const uploadRoot = path.join(process.cwd(), "uploads");
-
+// Generate a unique file name to avoid collisions
 const generateUniqueFileName = (originalName) => {
   const timestamp = Date.now();
-  const randomString = crypto.randomBytes(8).toString("hex");
+  const randomString = crypto.randomBytes(8).toString('hex');
   const extension = path.extname(originalName);
 
   return `${timestamp}-${randomString}${extension}`;
 };
 
-const uploadFile = async (bucketName, filePath, fileBuffer) => {
-  const fullFolderPath = path.join(uploadRoot, bucketName, path.dirname(filePath));
-  const fullFilePath = path.join(uploadRoot, bucketName, filePath);
+// Upload a file to Supabase Storage
+const uploadFile = async (bucketName, filePath, fileData) => {
+  try {
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, fileData, {
+        cacheControl: '3600',
+        upsert: false,
+      });
 
-  fs.mkdirSync(fullFolderPath, { recursive: true });
-  fs.writeFileSync(fullFilePath, fileBuffer);
+    if (error) {
+      throw error;
+    }
 
-  const cleanPath = filePath.replace(/\\/g, "/");
-  const fileUrl = `/uploads/${bucketName}/${cleanPath}`;
+    const fileUrl = getPublicUrl(bucketName, filePath);
 
-  return {
-    fileUrl,
-    path: cleanPath,
-  };
+    return { data, fileUrl };
+  } catch (error) {
+    console.error(`Error uploading file to ${bucketName}:`, error);
+    throw error;
+  }
 };
 
+// Get a public URL for a file
+const getPublicUrl = (bucketName, filePath) => {
+  const { data } = supabase.storage
+    .from(bucketName)
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+};
+
+// Remove a file from Supabase Storage
 const removeFile = async (bucketName, filePath) => {
-  const fullFilePath = path.join(uploadRoot, bucketName, filePath);
+  try {
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .remove([filePath]);
 
-  if (fs.existsSync(fullFilePath)) {
-    fs.unlinkSync(fullFilePath);
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`Error removing file from ${bucketName}:`, error);
+    throw error;
   }
-
-  return true;
 };
 
 module.exports = {
-  generateUniqueFileName,
   uploadFile,
+  getPublicUrl,
   removeFile,
+  generateUniqueFileName,
 };
